@@ -1,0 +1,647 @@
+---
+title: "Project assignment for the course 'Exploratory Data Analysis with the R Language'"
+subtitle: "Dataset: Students Performance in Exams"
+author: "Antonov Grigorii"
+date: "14.06.2023"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: united
+    highlight: zenburn
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.align = "center")
+```
+
+# Description of the dataset
+
+This dataset contains fictitious information about students' grades in the following subjects: math, reading, and writing.
+
+**Data reference**: https://www.kaggle.com/datasets/whenamancodes/students-performance-in-exams
+
+```{r}
+library(tidyverse)
+library(ggpubr)
+scores <- read_csv("exams.csv")
+colnames(scores)
+head(scores)
+```
+
+The dataset contains 1000 records and 8 characteristics (columns).
+
+## Clearing data
+
+There are no missing values in the presented dataset. In addition, there are no incorrectly entered data in the data.
+
+```{r}
+colSums(is.na(scores))
+```
+
+
+## Variable `gender`
+
+Character variable `gender` with two values: 
+
+- `male`
+- `female`
+
+Since there are only two parameters, it is convenient to move this variable to the rank of categorical variables.
+
+```{r}
+scores$gender <- fct_infreq(as.factor(scores$gender))
+table(scores$gender)
+# conversion to a factor variable
+scores |>
+    ggplot(aes(x = gender, fill = gender)) +
+    geom_bar(alpha = 0.9)  +
+  labs(title = "Gender representation", y = "Number of people", x = "Gender")  +
+  scale_fill_brewer(palette = "Set2")  +
+  theme(legend.position = "none",
+  plot.title = element_text(size = rel(1.2), hjust = 0.5))
+```
+
+This study involved roughly equal numbers of boys and girls, with a slight skew toward the male side.
+
+## Variable `race/ethnicity`
+
+Character variable `race/ethnicity` containing 5 variants: 
+
+- `group A`
+- `group B`
+- `group C`
+- `group D`
+- `group E`
+
+Because of the structure of the variable it is convenient to put it in the rank of categorical.
+For ease of calling I will rename the variable from "race/ethnicity" to "group".
+
+```{r}
+scores <- rename(scores, "group" = "race/ethnicity")
+scores$group <- fct_infreq(as.factor(scores$group))
+table(scores$group)
+scores |>
+    ggplot(aes(x = group, fill = group)) +
+    geom_bar(alpha = 0.9) +
+  labs(title = "Ethnic groups distribution",
+  y = "Number of people", x = "Ethnic group") +
+  scale_fill_brewer(palette = "Set3") +
+  theme(legend.position = "none",
+  plot.title = element_text(size = rel(1.2), hjust = 0.5))
+```
+
+The predominant group in this study is the `C' group.
+
+```{r}
+scores |>
+    ggplot(aes(x = group, fill = gender)) +
+    geom_bar(position = "dodge", alpha = 0.9)  +
+  labs(title = "Ethnic groups distribution",
+  y = "Number of people", x = "Ethnic group", fill = "Gender") +
+  scale_fill_brewer(palette = "Set3") +
+  theme(plot.title = element_text(size = rel(1.2), hjust = 0.5))
+```
+
+Only from the `B' group there are more girls participating in the test than there are boys.
+
+## Variable `parental level of education`
+
+Character variable denoting the parents' level of education and having the following options:
+
+- `associate's degree`
+- `bachelor's degree`
+- `some college` 
+- `some high school`
+- `high school` 
+- `master's degree`
+
+For convenience, it is better to convert the characteristic into a categorical variable.
+For ease of recall, I will rename the variable `parental level of education` to `parent_ed`.
+
+```{r}
+scores <- rename(scores, "parent_ed" = "parental level of education")
+scores$parent_ed <- fct_infreq(as.factor(scores$parent_ed))
+table(scores$parent_ed)
+scores |>
+    ggplot(aes(x = parent_ed, fill = parent_ed)) +
+    geom_bar(alpha = 0.9)  +
+  labs(title = "Parental level of education",
+  y = "Number of people", x = "Level of education") +
+  scale_fill_brewer(palette = "Set2") +
+  theme(legend.position = "none",
+  plot.title = element_text(size = rel(1.2), hjust = 0.5))
+```
+
+Based on the data, it follows that the majority of parents of tested children completed secondary education and partially received higher education. A smaller proportion of parents of tested children received higher education (`bachelor's degree` and `master's degree`).
+
+## Variable `lunch`
+
+Character variable indicating whether the subject has lunch provisioning. The parameter has two levels:
+
+- `standard`
+- `free/reduced`
+
+```{r}
+scores$lunch <- fct_infreq(as.factor(scores$lunch))
+table(scores$lunch)
+scores |>
+    ggplot(aes(x = lunch, fill = lunch)) +
+    geom_bar(alpha = 0.9)  +
+  labs(title = "Lunch provision",
+  y = "Number of people", x = "Lunch type") +
+  scale_fill_brewer(palette = "Set3") +
+  theme(legend.position = "none",
+  plot.title = element_text(size = rel(1.2), hjust = 0.5))
+```
+
+Most students received a standard lunch at the institution.
+
+## Variable `test preparation course`
+
+Character variable indicating whether or not the examinee had specialized exam preparation.
+The column is characterized by two values:
+
+- `completed`
+- `none`
+
+```{r}
+scores <- rename(scores, "prep_level" = "test preparation course")
+scores$prep_level <- fct_infreq(as.factor(scores$prep_level))
+table(scores$prep_level)
+scores |>
+    ggplot(aes(x = prep_level, fill = prep_level)) +
+    geom_bar(alpha = 0.9) +
+  labs(title = "Test preparation course",
+  y = "Number of people", x = "Preparation type") +
+  scale_fill_brewer(palette = "Set2") +
+  theme(legend.position = "none",
+  plot.title = element_text(size = rel(1.2), hjust = 0.5))
+```
+
+Most of the test takers did not pass the exam preparation.
+
+## Variable `math score`
+
+Numerical variable reflecting how the math test was written by the students. Scores are distributed between the values *13* and *100*. Average score for the test: *66.4*.
+
+```{r}
+scores <- rename(scores, "math" = "math score")
+summary(scores$math)
+math <- scores |>
+    ggplot(aes(x = math)) +
+    geom_histogram(aes(alpha = 0.9, fill =  ..x..)) +
+    geom_density(aes(y = ..density.. * 3000),
+    color = "#676b75", fill = "#676b75", size = 1, alpha = 0.1) +
+  labs(title = "Math test score distribution",
+  y = "Number of people", x = "Score") +
+  scale_fill_gradient(low = "#824141", high = "#418252") +
+  scale_y_continuous(
+    name = "Number of people",
+    sec.axis = sec_axis(~ . / 3000, name = "Density")) +
+  theme(axis.text = element_text(size = 12)) +
+  theme(legend.position = "none",
+  plot.title = element_text(size = rel(1.2), hjust = 0.5))
+math
+```
+
+## Variable `reading score`
+
+Numerical Variable reflecting how students did on the reading test. Scores are distributed between the values *27* and *100*. Average score for the test: *69*.
+
+```{r}
+scores <- rename(scores, "reading" = "reading score")
+summary(scores$reading)
+reading <- scores |>
+    ggplot(aes(x = reading)) +
+    geom_histogram(aes(alpha = 0.9, fill =  ..x..)) +
+    geom_density(aes(y = ..density.. * 3000),
+    color = "#676b75", fill = "#676b75", size = 1, alpha = 0.1) +
+  labs(title = "Reading test score distribution",
+  y = "Number of people", x = "Score") +
+  scale_fill_gradient(low = "#824141", high = "#418252") +
+  scale_y_continuous(
+    name = "Number of people",
+    sec.axis = sec_axis(~ . / 3000, name = "Density")) +
+  theme(axis.text = element_text(size = 12)) +
+  theme(legend.position = "none",
+  plot.title = element_text(size = rel(1.2), hjust = 0.5))
+reading
+```
+
+## Variable `writing score`
+
+Numerical Variable that reflects how students performed on the written test. Scores are distributed between the values *23* and *100*. Average score for the test: *67.74*.
+
+```{r}
+scores <- rename(scores, "writing" = "writing score")
+summary(scores$writing)
+writing <- scores |>
+    ggplot(aes(x = writing)) +
+    geom_histogram(aes(alpha = 0.9, fill =  ..x..)) +
+    geom_density(aes(y = ..density.. * 3000),
+    color = "#676b75", fill = "#676b75", size = 1, alpha = 0.1) +
+  labs(title = "Writing test score distribution",
+  y = "Number of people", x = "Score") +
+  scale_fill_gradient(low = "#824141", high = "#418252") +
+  scale_y_continuous(
+    name = "Number of people",
+    sec.axis = sec_axis(~ . / 3000, name = "Density")) +
+  theme(axis.text = element_text(size = 12)) +
+  theme(legend.position = "none",
+  plot.title = element_text(size = rel(1.2), hjust = 0.5))
+writing
+```
+
+## A comparison of results for the three subjects
+
+On average, students did better on the `reading` test and worse on the `math` test.
+
+```{r, fig.width = 11, fig.height = 5}
+library(patchwork)
+(math + reading + writing) +
+  plot_annotation(title = "Comparison of results in three subjects",
+  tag_levels = "I",
+  theme = theme(plot.title = element_text(size = rel(1.3), hjust = 0.5))) +
+  plot_layout(ncol = 3)
+```
+
+# Data Exploration (Objectives and Goals)
+
+After parsing the parameters, it makes sense to see how the parameters are related. In addition, it is worth answering some questions, such as:
+
+1. How effective is the preparation for the exam
+2. What parameters have the impact on the results of the exams
+3. What parameters have the impact on the results of the lunch type of the students
+4. Whether there is a correlation between the results of the various examinations
+
+## Relationship between numerical variables
+
+```{r}
+cor1 <- scores |>
+  ggplot(aes(x = math, y = reading, color = prep_level)) +
+  geom_point(size = 2) +
+  labs(title = "Correlation between results",
+  subtitle = "math ~ reading",
+  y = "Number of people", x = "Score", color = "Preparation") +
+  theme(plot.title = element_text(size = rel(1.1), hjust = 0.5),
+  plot.subtitle = element_text(hjust = 0.5)) +
+  stat_cor(aes(color = NULL), show.legend = FALSE, method = "pearson") +
+  geom_smooth(aes(group = 1), method = "lm", color = "#676b75") +
+  scale_color_brewer(palette = "Set3")
+cor1
+```
+
+```{r}
+cor2 <- scores |>
+  ggplot(aes(x = reading, y = writing, color = prep_level)) +
+  geom_point(size = 2) +
+  labs(title = "Correlation between results",
+  subtitle = "reading ~ writing",
+  y = "Number of people", x = "Score", color = "Preparation") +
+  theme(plot.title = element_text(size = rel(1.1), hjust = 0.5),
+  plot.subtitle = element_text(hjust = 0.5)) +
+  stat_cor(aes(color = NULL), show.legend = FALSE, method = "pearson") +
+  geom_smooth(aes(group = 1), method = "lm", color = "#676b75") +
+  scale_color_brewer(palette = "Set3")
+cor2
+```
+
+```{r}
+cor3 <- scores |>
+  ggplot(aes(x = writing, y = math, color = prep_level)) +
+  geom_point(size = 2) +
+  labs(title = "Correlation between results",
+  subtitle = "writing ~ math",
+  y = "Number of people", x = "Score", color = "Preparation") +
+  theme(plot.title = element_text(size = rel(1.1), hjust = 0.5),
+  plot.subtitle = element_text(hjust = 0.5)) +
+  stat_cor(aes(color = NULL), show.legend = FALSE, method = "pearson") +
+  geom_smooth(aes(group = 1), method = "lm", color = "#676b75") +
+  scale_color_brewer(palette = "Set3")
+cor3
+```
+
+Note the great importance of correlation for numerical variables: the greater the score in one subject, the greater the score in the other. That is, good students are good at everything).
+Note the highest value of correlation between the test results in reading and writing. This can be explained by the fact that reading and writing are essentially similar skills, strongly correlated at the level of higher nervous activity.
+
+In addition, most of the yellow dots where students have passed preparation are closer to the upper right corner of the coordinate plane - in the area of high scores. That is, we can say that preparation for exams has a positive effect on the results.
+
+```{r, fig.width = 11, fig.height = 5}
+(cor1 + cor2 + cor3) +
+  plot_annotation(title = "Relationship between numerical variables",
+  tag_levels = "I",
+  theme = theme(plot.title = element_text(size = rel(1.3), hjust = 0.5))) +
+  plot_layout(ncol = 3)
+```
+
+## How training affects results
+
+```{r}
+scores |>
+    ggplot(aes(x = math)) +
+    geom_density(aes(y = ..density.., fill = prep_level), alpha = 0.5) +
+  labs(title = "Math test score distribution depending on preparation",
+  y = "Density", x = "Score", fill = "Preparation") +
+  scale_fill_brewer(palette = "Set2") +
+  theme(axis.text = element_text(size = 12)) +
+  theme(plot.title = element_text(size = rel(1.2), hjust = 0.5))
+```
+
+```{r}
+scores |>
+    ggplot(aes(x = reading)) +
+    geom_density(aes(y = ..density.., fill = prep_level), alpha = 0.5) +
+  labs(title = "Reading test score distribution depending on preparation",
+  y = "Density", x = "Score", fill = "Preparation") +
+  scale_fill_brewer(palette = "Set2") +
+  theme(axis.text = element_text(size = 12)) +
+  theme(plot.title = element_text(size = rel(1.2), hjust = 0.5))
+```
+
+```{r}
+scores |>
+    ggplot(aes(x = writing)) +
+    geom_density(aes(y = ..density.., fill = prep_level), alpha = 0.5) +
+  labs(title = "Writing test score distribution depending on preparation",
+  y = "Density", x = "Score", fill = "Preparation") +
+  scale_fill_brewer(palette = "Set2") +
+  theme(axis.text = element_text(size = 12)) +
+  theme(plot.title = element_text(size = rel(1.2), hjust = 0.5))
+```
+
+I see that for all types of tests, the distribution of test scores for those who have undergone training is to the right of the distribution of scores for those who have not undergone this training.
+
+### Statistical verification of training effectiveness
+
+#### Data normality check
+```{r}
+shapiro.test(pull(scores[scores$prep_level == "completed", 6]))
+# math and preparation completed
+shapiro.test(pull(scores[scores$prep_level == "none", 6]))
+# math and no preparation
+shapiro.test(pull(scores[scores$prep_level == "completed", 7]))
+# reading and preparation completed
+shapiro.test(pull(scores[scores$prep_level == "none", 7]))
+# reading and no preparation
+shapiro.test(pull(scores[scores$prep_level == "completed", 8]))
+# writing and preparation completed
+shapiro.test(pull(scores[scores$prep_level == "none", 8]))
+# writing and no preparation
+```
+
+The data did not pass the normality test. We need to use nonparametric statistical tests, such as the **Mann-Whitney** U test or its modifications.
+
+```{r, fig.width = 11, fig.height = 5}
+scores |>
+  select(prep_level, math, reading, writing) |>
+  pivot_longer(cols = c(math, reading, writing),
+  names_to = "test_name", values_to = "score") |>
+  ggplot(aes(y = score, x = test_name, fill = prep_level)) +
+    geom_boxplot(alpha = 0.9) +
+  labs(title = "Test score distribution depending on preparation",
+  y = "Score", x = "Test type", fill = "Preparation") +
+  scale_fill_brewer(palette = "Set2") +
+  stat_compare_means(size = 4, vjust = -0.5)  +
+  theme(axis.text = element_text(size = 12)) +
+  theme(plot.title = element_text(size = rel(1.2), hjust = 0.5))
+```
+
+In this case, to test for equality of medians I used the **Kruskal-Wallis test**, which is a modification of the Mann-Whitney U test, and is suitable for measuring nonparametric independent data divided into three groups. Judging by the test results, I can reject the null hypothesis of equality of the mean scores for the test. That is, it is legitimate to assume that preparation for the test has a positive effect on its results.
+
+## The effect of gender on test results
+
+#### Checking for data normality
+
+```{r}
+shapiro.test(pull(scores[scores$gender == "male", 6]))
+# math and male
+shapiro.test(pull(scores[scores$gender == "female", 6]))
+# math and female
+shapiro.test(pull(scores[scores$gender == "male", 7]))
+# reading and male
+shapiro.test(pull(scores[scores$gender == "female", 7]))
+# reading and female
+shapiro.test(pull(scores[scores$gender == "male", 8]))
+# writing and male
+shapiro.test(pull(scores[scores$gender == "female", 8]))
+# writing and female
+```
+
+Almost all samples, except the sample of boys' math results, failed the normality test. It is better not to use the T-test in this case.
+
+```{r, fig.width = 11, fig.height = 5}
+scores |>
+  select(gender, math, reading, writing) |>
+  pivot_longer(cols = c(math, reading, writing),
+  names_to = "test_name", values_to = "score") |>
+  ggplot(aes(y = score, x = test_name, fill = gender)) +
+    geom_boxplot(alpha = 0.9) +
+  labs(title = "Test score distribution depending on gender",
+  y = "Score", x = "Test type", fill = "Gender") +
+  scale_fill_brewer(palette = "Set2") +
+  stat_compare_means(size = 4, vjust = -0.5)  +
+  theme(axis.text = element_text(size = 12)) +
+  theme(plot.title = element_text(size = rel(1.2), hjust = 0.5))
+```
+
+Based on the results, the boys did better, on average, on the math test, and the girls did better on the reading and writing tests.
+
+## Effects of parental education on test results
+
+```{r, fig.width = 11, fig.height = 5}
+scores |>
+  select(parent_ed, math, reading, writing) |>
+  pivot_longer(cols = c(math, reading, writing),
+  names_to = "test_name", values_to = "score") |>
+  ggplot(aes(y = score, x = test_name, fill = parent_ed)) +
+    geom_boxplot(alpha = 0.9) +
+  labs(title = "Test score distribution depending on parental education level",
+  y = "Score", x = "Test type", fill = "Parental education") +
+  scale_fill_brewer(palette = "Set3") +
+  theme(axis.text = element_text(size = 12)) +
+  theme(plot.title = element_text(size = rel(1.2), hjust = 0.5))
+```
+
+Let's combine children whose parents have received a complete higher education and those whose parents have not received a complete higher education into two groups: `higher' and `no_higher', respectively.
+
+#### Check for normality of data
+
+```{r}
+shapiro.test(pull(scores[scores$parent_ed %in% c("bachelor's degree",
+"master's degree"), 6]))
+# math and higher education
+shapiro.test(pull(scores[scores$parent_ed %in% c("associate's degree",
+  "some college", "some high school", "high school"), 6]))
+# math and no higher education
+shapiro.test(pull(scores[scores$parent_ed %in% c("bachelor's degree",
+"master's degree"), 7]))
+# reading and higher education
+shapiro.test(pull(scores[scores$parent_ed %in% c("associate's degree",
+  "some college", "some high school", "high school"), 7]))
+# reading and no higher education
+shapiro.test(pull(scores[scores$parent_ed %in% c("bachelor's degree",
+"master's degree"), 8]))
+# writing and higher education
+shapiro.test(pull(scores[scores$parent_ed %in% c("associate's degree",
+  "some college", "some high school", "high school"), 8]))
+# writing and no higher education
+```
+
+None of the samples passed the normality test.
+
+```{r, fig.width = 11, fig.height = 5}
+scores |>
+  mutate(new_ed = fct_collapse(parent_ed,
+  higher = c("bachelor's degree", "master's degree"),
+  no_higher = c("associate's degree", "some college",
+  "some high school", "high school"))) |>
+  select(new_ed, math, reading, writing) |>
+  pivot_longer(cols = c(math, reading, writing),
+  names_to = "test_name", values_to = "score") |>
+  ggplot(aes(y = score, x = test_name, fill = new_ed)) +
+    geom_boxplot(alpha = 0.9) +
+    stat_compare_means(size = 4, vjust = -0.5)  +
+  labs(title = "Test score distribution depending on parental education level",
+  y = "Score", x = "Test type", fill = "Parental education") +
+  scale_fill_brewer(palette = "Set3") +
+  theme(axis.text = element_text(size = 12)) +
+  theme(plot.title = element_text(size = rel(1.2), hjust = 0.5))
+```
+
+The average scores of students whose parents have completed higher education are higher than those of students whose parents have no higher education. The average scores are highest for students whose parents have a master's degree or higher.
+
+## Effect of the student's ethnic group on the test results
+
+```{r, fig.width = 11, fig.height = 5}
+scores |>
+  select(group, math, reading, writing) |>
+  pivot_longer(cols = c(math, reading, writing),
+  names_to = "test_name", values_to = "score") |>
+  ggplot(aes(y = score, x = test_name, fill = group)) +
+    geom_boxplot(alpha = 0.9) +
+  labs(title = "Test score distribution depending on ethnic group",
+  y = "Score", x = "Test type", fill = "Ethnic group") +
+  scale_fill_brewer(palette = "Set3") +
+  theme(axis.text = element_text(size = 12)) +
+  theme(plot.title = element_text(size = rel(1.2), hjust = 0.5))
+```
+
+The graph shows that some groups are higher than others. Let's combine the top two groups `D` and `E` into `group_DE`, and the bottom three, `A`, `B` and `C` into `group_ABC`, to perform a statistical test on them.
+
+#### Data normality check
+
+```{r}
+shapiro.test(pull(scores[scores$group %in% c("group D", "group E"), 6]))
+# math and groups D and E
+shapiro.test(pull(scores[scores$group %in% c("group A", "group B",
+"group C"), 6]))
+# math and groups A, B and C
+shapiro.test(pull(scores[scores$group %in% c("group D", "group E"), 7]))
+# reading and groups D and E
+shapiro.test(pull(scores[scores$group %in% c("group A", "group B",
+"group C"), 7]))
+# reading and groups A, B and C
+shapiro.test(pull(scores[scores$group %in% c("group D", "group E"), 8]))
+# writing and groups D and E
+shapiro.test(pull(scores[scores$group %in% c("group A", "group B",
+"group C"), 8]))
+# writing and groups A, B and C
+```
+
+None of the samples except the first (the math test and groups `D` and `E`) passed the test for data normality.
+
+```{r, fig.width = 11, fig.height = 5}
+scores |>
+  mutate(new_group = fct_collapse(group,
+  group_DE = c("group D", "group E"),
+  group_ABC = c("group A", "group B", "group C"))) |>
+  select(new_group, math, reading, writing) |>
+  pivot_longer(cols = c(math, reading, writing),
+  names_to = "test_name", values_to = "score") |>
+  ggplot(aes(y = score, x = test_name, fill = new_group)) +
+    geom_boxplot(alpha = 0.9) +
+    stat_compare_means(size = 4, vjust = -0.5)  +
+  labs(title = "Test score distribution depending on ethnic group",
+  y = "Score", x = "Test type", fill = "Ethnic group") +
+  scale_fill_brewer(palette = "Set3") +
+  theme(axis.text = element_text(size = 12)) +
+  theme(plot.title = element_text(size = rel(1.2), hjust = 0.5))
+```
+
+On average, students in groups `D` and `E` do better than students in other groups, especially in `math`.
+
+## Effect of having a complete lunch on test results
+
+#### Check for normality of data
+
+```{r}
+shapiro.test(pull(scores[scores$lunch == "free/reduced", 6]))
+# math and free or reduced lunch
+shapiro.test(pull(scores[scores$lunch == "standard", 6]))
+# math and standard lunch
+shapiro.test(pull(scores[scores$lunch == "free/reduced", 7]))
+# reading and free or reduced lunch
+shapiro.test(pull(scores[scores$lunch == "standard", 7]))
+# reading and standard lunch
+shapiro.test(pull(scores[scores$lunch == "free/reduced", 8]))
+# writing and free or reduced lunch
+shapiro.test(pull(scores[scores$lunch == "standard", 8]))
+# writing and standard lunch
+```
+
+Interestingly, the data with an incomplete lunch are normally distributed (cannot reject this hypothesis), while in the case of a full lunch they are not normally distributed.
+
+```{r, fig.width = 11, fig.height = 5}
+scores |>
+  select(lunch, math, reading, writing) |>
+  pivot_longer(cols = c(math, reading, writing),
+  names_to = "test_name", values_to = "score") |>
+  ggplot(aes(y = score, x = test_name, fill = lunch)) +
+    geom_boxplot(alpha = 0.9) +
+    stat_compare_means(size = 4, vjust = -0.5) +
+  labs(title = "Test score distribution depending on lunch type",
+  y = "Score", x = "Test type", fill = "Lunch type") +
+  scale_fill_brewer(palette = "Set3") +
+  theme(axis.text = element_text(size = 12)) +
+  theme(plot.title = element_text(size = rel(1.2), hjust = 0.5))
+```
+
+According to the test results, we can fairly confidently reject the hypothesis that the type of `lunch` does not affect the average test results. At the same time, we can assume that the type of lunch depends on the level of earnings in the family, i.e. on the standard of living. In addition, a well-fed person tends to think better than a hungry one.
+
+## The influence of ethnicity on the type of lunch
+
+```{r, fig.width = 11, fig.height = 5}
+scores |>
+    ggplot(aes(x = group, fill = lunch)) +
+    geom_bar(position = "dodge", alpha = 0.8)  +
+  labs(title = "Lunch type depending on ethnic group",
+  y = "Number of people", x = "Ethnic group", fill = "Lunch type") +
+  scale_fill_brewer(palette = "Set2") +
+  theme(plot.title = element_text(size = rel(1.2), hjust = 0.5))
+```
+
+Analyzing the data, we see that in all groups there are more students who receive a standard lunch. At the same time, it is interesting that in group `E' children are distributed across the two food groups almost equally, with the average score of children from this group being one of the highest. That is, the idea that the type of lunch directly correlates with students' average test score is called into question.
+
+## Influence of parents' education level on the type of lunch
+
+```{r, fig.width = 11, fig.height = 5}
+scores |>
+    ggplot(aes(x = parent_ed, fill = lunch)) +
+    geom_bar(position = "dodge", alpha = 0.8)  +
+  labs(title = "Lunch type depending on parental education",
+  y = "Number of people", x = "Parental education", fill = "Lunch type") +
+  scale_fill_brewer(palette = "Set2") +
+  theme(plot.title = element_text(size = rel(1.2), hjust = 0.5),
+  legend.title = element_text(size = rel(1)))
+```
+
+In addition, it does not appear that the level of education of the parents has much influence on the ratio of children with full and incomplete lunches.
+
+# Conclusions
+1. `Test preparation course` has a positive effect on test results
+2. Children with complete `lunch` do better, on average, at writing the test. Perhaps the underlying factor here is income level, which determines the type of lunch
+3. Students whose parents have completed higher education do better, on average, on tests in the subjects presented
+4. In this population, girls do better on `reading` and `writing` assignments, and boys do better on `math` tests
+5. Generally, children from groups `D` and `E` perform best.
+6. The ethnicity and educational level of the parents of the test takers in the data presented has almost no effect on the quality of lunches
