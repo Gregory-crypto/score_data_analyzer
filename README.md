@@ -14,6 +14,8 @@ This dataset contains fictitious information about students' grades in the follo
 
 **Data reference**: https://www.kaggle.com/datasets/whenamancodes/students-performance-in-exams
 
+## Objectives and Goals
+
 In this file I will explore the features of dataset, parse the parameters, it makes sense to see how the parameters are related. In addition, it is worth answering some questions, such as:
 
 1. How effective is the preparation for the exam
