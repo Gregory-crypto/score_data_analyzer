@@ -8,7 +8,7 @@ library(patchwork)
 
 # Data
 
-scores <- read_csv("exams.csv")
+scores <- read_csv("http://roycekimmons.com/system/generate_data.php?dataset=exams&n=1000")
 
 # Preparation
 

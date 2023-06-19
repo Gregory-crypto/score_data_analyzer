@@ -25,7 +25,7 @@ This dataset contains fictitious information about students' grades in the follo
 library(tidyverse)
 library(ggpubr)
 library(patchwork)
-scores <- read_csv("exams.csv")
+scores <- read_csv("http://roycekimmons.com/system/generate_data.php?dataset=exams&n=1000")
 colnames(scores)
 head(scores)
 ```
